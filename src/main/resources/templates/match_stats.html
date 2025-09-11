@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Match Stats</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 90%;
+            margin: 30px auto;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: black;
+            color: white;
+        }
+
+        th, td {
+            vertical-align: middle;
+        }
+
+        tr.team-border {
+            border-top: 3px solid #999;
+        }
+
+        tr.member-border {
+            border-top: 1px dotted #ccc;
+        }
+
+        .bar-container {
+            width: 150px;
+            height: 14px;
+            background-color: #ddd;
+            border-radius: 10px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .bar {
+            height: 100%;
+            background-color: #f56565;
+            border-radius: 10px;
+        }
+
+        .bar-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 100%;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            color: #333;
+        }
+
+        .winner-team {
+            background-color: #ffe6f0;
+        }
+
+        .searched-player-team {
+            background-color: #e6f7ff;
+        }
+
+        .bold-nickname {
+            font-weight: bold;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+
+    </style>
+</head>
+<body>
+<h2 style="text-align:center;">Match Stats</h2>
+
+<table>
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>닉네임</th>
+        <th>킬</th>
+        <th>어시</th>
+        <th>딜량</th>
+        <th>DBNO</th>
+        <th>생존 시간</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    <!-- ✅ teamStats가 비어 있지 않을 때만 출력 -->
+    <tr th:if="${teamStats != null and !teamStats.isEmpty()}" th:each="entry : ${teamStats}">
+        <td colspan="7" style="padding: 0;">
+            <table style="width: 100%; border: none;">
+                <tbody>
+                <tr th:each="stat, iterStat : ${entry.value}"
+                    th:class="${entry.key == winnerTeamId ? 'winner-team' : (entry.key == searchedPlayerTeamId ? 'searched-player-team' : '')}"
+                    th:classappend="${iterStat.index == 0} ? ' team-border' : ' member-border'">
+                    <td th:if="${iterStat.index == 0}" th:rowspan="${#lists.size(entry.value)}"
+                        th:text="'#' + ${entry.key}"></td>
+                    <td th:text="${stat.name}"
+                        th:class="${nickname != null and stat.name != null and nickname.toLowerCase() == stat.name.toLowerCase() ? 'bold-nickname' : ''}">
+                    </td>
+                    <td th:text="${stat.kills}">0</td>
+                    <td th:text="${stat.assists}">0</td>
+                    <td>
+                        <div class="bar-container">
+                            <div class="bar"
+                                 th:style="'width:' + (${stat.damageDealt} / ${maxDamage} * 100) + '%;'"></div>
+                            <div class="bar-label" th:text="${stat.damageDealt}"></div>
+                        </div>
+                    </td>
+                    <td th:text="${stat.DBNOs}"></td>
+                    <td th:text="${#numbers.formatInteger(stat.timeSurvived / 60, 0)} + ':' + ${#numbers.formatInteger(stat.timeSurvived % 60, 0)}">0:00</td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+
+    <!-- ✅ teamStats가 null이거나 비었을 때 -->
+    <tr th:if="${teamStats == null or teamStats.isEmpty()}">
+        <td colspan="7" class="no-data">표시할 데이터가 없습니다.</td>
+    </tr>
+
+    </tbody>
+</table>
+</body>
+</html>

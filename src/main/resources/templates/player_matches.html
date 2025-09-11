@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Recent Matches</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fafafa;
+        }
+
+        .container {
+            width: 80%;
+            margin: 30px auto;
+        }
+
+        .match-card {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        .match-card:hover {
+            background-color: #f9f9f9;
+        }
+
+        .match-card strong {
+            color: #333;
+        }
+
+        .pagination {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .pagination span.current {
+            font-weight: bold;
+            color: black;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 th:text="${nickname} + '의 최근 전적'"></h2>
+
+    <div th:each="summary, iter : ${matchPage.content}">
+        <div class="match-card"
+             th:attr="data-match-id=${matchIds[iter.index]}, data-nickname=${nickname}"
+             onclick="goToMatch(this)">
+            <p><strong>게임 모드:</strong> <span th:text="${summary.gameMode}"></span></p>
+            <p><strong>순위:</strong> <span th:text="${summary.winPlace}"></span></p>
+            <p><strong>킬:</strong> <span th:text="${summary.kills}"></span>,
+                <strong>어시:</strong> <span th:text="${summary.assists}"></span>,
+                <strong>DBNO:</strong> <span th:text="${summary.dBNOs}"></span></p>
+            <p><strong>딜량:</strong> <span th:text="${summary.damageDealt}"></span></p>
+            <p><strong>생존시간:</strong>
+                <span th:text="${#numbers.formatInteger(summary.timeSurvived / 60, 0)} + ':' + ${#numbers.formatInteger(summary.timeSurvived % 60, 0)}"></span>
+            </p>
+        </div>
+    </div>
+
+    <div class="pagination">
+        <span th:if="${matchPage.hasPrevious()}">
+            <a th:href="@{/pubg/search(nickname=${nickname}, page=${matchPage.number - 1})}">&laquo;</a>
+        </span>
+
+        <span th:each="i : ${#numbers.sequence(0, matchPage.totalPages - 1)}">
+            <span th:if="${i == matchPage.number}" class="current" th:text="${i + 1}">1</span>
+            <a th:if="${i != matchPage.number}" th:href="@{/pubg/search(nickname=${nickname}, page=${i})}" th:text="${i + 1}"></a>
+        </span>
+
+        <span th:if="${matchPage.hasNext()}">
+            <a th:href="@{/pubg/search(nickname=${nickname}, page=${matchPage.number + 1})}">&raquo;</a>
+        </span>
+    </div>
+</div>
+
+<script>
+    function goToMatch(el) {
+        const matchId = el.getAttribute("data-match-id");
+        const nickname = el.getAttribute("data-nickname");
+        window.location.href = `/pubg/match-view?matchId=${matchId}&nickname=${nickname}`;
+    }
+</script>
+</body>
+</html>
