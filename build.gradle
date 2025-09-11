@@ -34,6 +34,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'  // html 보이게
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'me.paulschwarz:spring-dotenv:latest.release'
 	runtimeOnly 'com.h2database:h2'
 
 }
