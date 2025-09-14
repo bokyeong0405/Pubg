@@ -91,15 +91,6 @@ public class PubgController {
         model.addAttribute("searchedPlayerTeamId", searchedPlayerTeamId);
         model.addAttribute("maxDamage", maxDamage);
 
-//        System.out.println("🔥 teamStats 데이터 확인");
-//        teamStats.forEach((teamId, list) -> {
-//            System.out.println("teamId: " + teamId);
-//            for (MatchDetailResponse.Included.Attributes.Stats stat : list) {
-//                System.out.println("  - name: " + stat.getName() + ", kills: " + stat.getKills());
-//            }
-//        });
-
-
         return "match_stats";
     }
 
@@ -116,13 +107,6 @@ public class PubgController {
         int toIndex = Math.min(fromIndex + pageSize, allMatches.size());
         List<String> pagedMatchIds = allMatches.subList(fromIndex, toIndex);
 
-        // 요약 통계 추출
-//        List<MatchDetailResponse.Included.Attributes.Stats> playerSummaries = pagedMatchIds.stream()
-//                .map(id -> pubgService.getPlayerStatsFromMatch(id, nickname))
-//                .collect(Collectors.toList());
-//
-//        Pageable pageable = PageRequest.of(page, pageSize);
-//        PageImpl<MatchDetailResponse.Included.Attributes.Stats> matchPage = new PageImpl<>(playerSummaries, pageable, allMatches.size());
         List<MatchDetailResponse> matchSummaries = pagedMatchIds.stream()
                 .map(id -> pubgService.getMatchSummaryDto(id, nickname))
                 .collect(Collectors.toList());
@@ -135,26 +119,4 @@ public class PubgController {
         model.addAttribute("matchPage", matchPage);
         return "player_matches";
     }
-
-
-//    @GetMapping("/search")
-//    public String searchPlayer(@RequestParam String nickname,
-//                               @RequestParam(defaultValue = "0") int page,
-//                               Model model) {
-//
-//        String accountId = pubgService.getPlayerByNickname(nickname);
-//        List<String> allMatches = pubgService.getMatchByAccountId(accountId);
-//
-//        int pageSize = 10;
-//        int fromIndex = Math.min(page * pageSize, allMatches.size());
-//        int toIndex = Math.min(fromIndex + pageSize, allMatches.size());
-//        List<String> pagedMatches = allMatches.subList(fromIndex, toIndex);
-//
-//        Pageable pageable = PageRequest.of(page, pageSize);
-//        PageImpl<String> matchPage = new PageImpl<>(pagedMatches, pageable, allMatches.size());
-//
-//        model.addAttribute("nickname", nickname);
-//        model.addAttribute("matchPage", matchPage);
-//        return "player_matches";
-//    }
 }

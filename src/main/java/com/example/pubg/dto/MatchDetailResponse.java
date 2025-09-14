@@ -11,6 +11,7 @@ public class MatchDetailResponse {
 
     private DataWrapper data;
     private List<Included> included;
+    private String matchId;
 
     // ✅ MatchSummaryDto 역할을 수행할 필드 추가
     private int kills;

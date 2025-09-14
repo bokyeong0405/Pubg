@@ -152,6 +152,7 @@ public class PubgService {
                     .orElseThrow();
 
             MatchDetailResponse dto = new MatchDetailResponse();
+            dto.setMatchId(matchId);
             dto.setKills(stat.getKills());
             dto.setAssists(stat.getAssists());
             dto.setDBNOs(stat.getDBNOs());
