@@ -12,5 +12,13 @@ export const searchPlayer = (nickname, page = 0) => {
 };
 
 export const getMatchStats = (matchId) => {
-  return apiClient.get(`/matches/${matchId}`);
+    return apiClient.get(`/matches/${matchId}`);
+};
+
+export const getMatchAnalysis = (matchData) => {
+    return apiClient.post(`/matches/analysis`, matchData, {
+        headers: {
+            'Content-Type': 'text/plain'
+        }
+    });
 };
