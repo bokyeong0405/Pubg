@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { getMatchStats } from '../services/api';
+import { getMatchStats, getMatchAnalysis } from '../services/api';
 import {
   Container,
   Typography,
@@ -14,7 +14,10 @@ import {
   TableRow,
   Paper,
   Box,
-  Button
+  Button,
+  Card,
+  CardContent,
+  CardHeader
 } from '@mui/material';
 
 const MatchPage = () => {
@@ -25,13 +28,14 @@ const MatchPage = () => {
   const [matchStats, setMatchStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [analysis, setAnalysis] = useState('');
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
 
   useEffect(() => {
     const fetchMatchStats = async () => {
       try {
         setLoading(true);
         const response = await getMatchStats(matchId);
-        // Group by teamId
         const groupedByTeam = response.data.reduce((acc, player) => {
           const teamId = player.teamId || 'unknown';
           if (!acc[teamId]) {
@@ -41,7 +45,6 @@ const MatchPage = () => {
           return acc;
         }, {});
 
-        // Sort players within each team
         for (const teamId in groupedByTeam) {
           groupedByTeam[teamId].sort((a, b) => {
             if (a.winPlace !== b.winPlace) {
@@ -63,8 +66,28 @@ const MatchPage = () => {
     fetchMatchStats();
   }, [matchId]);
 
+  const handleAnalysis = async () => {
+    if (!matchStats) return;
+    setLoadingAnalysis(true);
+    setAnalysis('');
+    try {
+        // 분석을 위해 모든 플레이어 스탯 데이터를 문자열로 변환
+        const statsString = Object.values(matchStats).flat().map(player => (
+            `- 플레이어: ${player.name}, 킬: ${player.kills}, 어시스트: ${player.assists}, 데미지: ${Math.round(player.damageDealt)}, 생존시간: ${Math.round(player.timeSurvived / 60)}분, 등수: ${player.winPlace}등`
+        )).join('\n');
+        
+        const response = await getMatchAnalysis(statsString);
+        setAnalysis(response.data);
+    } catch (error) {
+        console.error('Error fetching match analysis:', error);
+        setAnalysis('분석 중 오류가 발생했습니다.');
+    } finally {
+        setLoadingAnalysis(false);
+    }
+  };
+
   if (loading) {
-    return <CircularProgress sx={{ display: 'block', margin: '100px auto' }} />;
+    return <CircularProgress sx={{ display: 'block', margin: '100px auto' }} />; 
   }
 
   if (error) {
@@ -77,7 +100,7 @@ const MatchPage = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h4" component="h1">
           매치 상세 정보
         </Typography>
@@ -85,6 +108,22 @@ const MatchPage = () => {
           플레이어 정보로 돌아가기
         </Button>
       </Box>
+
+      <Box mb={4}>
+        <Button variant="contained" onClick={handleAnalysis} disabled={loadingAnalysis}>
+          {loadingAnalysis ? <CircularProgress size={24} /> : 'AI 매치 분석'}
+        </Button>
+      </Box>
+
+      {analysis && (
+        <Card sx={{ mb: 4, whiteSpace: 'pre-wrap' }}>
+          <CardHeader title="AI 분석 결과" />
+          <CardContent>
+            <Typography variant="body1">{analysis}</Typography>
+          </CardContent>
+        </Card>
+      )}
+
       {Object.entries(matchStats)
         .sort(([, playersA], [, playersB]) => {
           const bestRankA = Math.min(...playersA.map(p => p.winPlace));
@@ -137,5 +176,6 @@ const MatchPage = () => {
     </Container>
   );
 };
+
 
 export default MatchPage;
