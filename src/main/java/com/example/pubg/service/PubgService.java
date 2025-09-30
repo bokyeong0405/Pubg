@@ -6,6 +6,7 @@ import com.example.pubg.dto.PlayerListResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
@@ -18,42 +19,34 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PubgService {
     private final WebClient.Builder webClientBuilder;
     private static final String PYTHON_API_URL = "http://127.0.0.1:8000";
 
-    // Job 상태와 결과를 저장할 인메모리 맵
-    private final Map<String, String> jobResults = new ConcurrentHashMap<>();
-
-    public String startAnalysisJob(String matchData) {
-        String jobId = UUID.randomUUID().toString();
-        jobResults.put(jobId, "PENDING"); // 초기 상태를 PENDING으로 설정
-        processAnalysis(jobId, matchData);
-        return jobId;
-    }
-
-    @Async // 이 메소드를 별도의 스레드에서 비동기적으로 실행
-    public void processAnalysis(String jobId, String matchData) {
+    public String getAnalysis(String matchData) {
         WebClient webClient = webClientBuilder.baseUrl(PYTHON_API_URL).build();
         try {
-            String analysisResult = webClient.post()
+            Map<String, Object> responseMap = webClient.post()
                     .uri("/analyze")
                     .bodyValue(Map.of("match_info", matchData))
                     .retrieve()
                     .bodyToMono(Map.class)
-                    .map(response -> (String) response.get("analysis"))
-                    .block(); // 비동기 호출을 동기적으로 기다림 (주의: @Async 메소드 내에서만 사용)
+                    .block();
 
-            jobResults.put(jobId, analysisResult);
+            if (responseMap != null && responseMap.containsKey("error")) {
+                return "PYTHON_ERROR: " + responseMap.get("error");
+            } else if (responseMap != null && responseMap.containsKey("analysis")) {
+                return (String) responseMap.get("analysis");
+            } else {
+                return "ERROR: Unknown response from Python server";
+            }
         } catch (Exception e) {
-            jobResults.put(jobId, "ERROR: " + e.getMessage());
+            log.error(e.getMessage(), e);
+            return "ERROR: " + e.getMessage();
         }
-    }
-
-    public String getJobResult(String jobId) {
-        return jobResults.getOrDefault(jobId, "NOT_FOUND");
     }
 
     // 기존 메소드들은 유지 (생략)
